@@ -1,5 +1,3 @@
-
-
 import argparse
 import boto3
 
@@ -18,7 +16,7 @@ def get_cloudwatch_log_groups():
             kwargs["NextToken"] = response["NextToken"]
         else:
             break
-
+    print(f"\nFound ${len(cloudwatch_log_groups)} log groups\n")
     return cloudwatch_log_groups
 
 
@@ -26,22 +24,22 @@ def cloudwatch_set_retention(args):
     retention = vars(args)["retention"]
     cloudwatch_log_groups = get_cloudwatch_log_groups()
 
-    for group in cloudwatch_log_groups:
-        print(group)
-        if "retentionInDays" not in group or group["retentionInDays"] != retention:
-            print(f"Retention needs to be updated for: {group['logGroupName']}")
+    for log_group in cloudwatch_log_groups:
+        if "retentionInDays" not in log_group or log_group["retentionInDays"] != retention:
+            print(f"Updating : {log_group['logGroupName']}")
             cloudwatch.put_retention_policy(
-                logGroupName=group["logGroupName"], retentionInDays=retention
+                logGroupName=log_group["logGroupName"], retentionInDays=retention
             )
         else:
             print(
-                f"CloudWatch Loggroup: {group['logGroupName']} already has the specified retention of {group['retentionInDays']} days."
+                f"CloudWatch Log group: {log_group['logGroupName']} already has the specified retention of {log_group['retentionInDays']} days."
             )
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Set a retention in days for all your CloudWatch Logs in a single region."
+        prog="SetRetentionDays",
+        description="Set  retention days for all your CloudWatch Logs."
     )
     parser.add_argument(
         "retention",
