@@ -40,7 +40,7 @@ def start_tail(arn):
      try:
          response = cloudwatch.start_live_tail(
              logGroupIdentifiers=[arn],
-             #logEventFilterPattern=filter_pattern
+             logEventFilterPattern="-END -INIT_START -START -REPORT"
          )
          event_stream = response['responseStream']
          listener = keyboard.Listener(on_press=on_press)

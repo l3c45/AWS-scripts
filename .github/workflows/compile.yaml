@@ -1,0 +1,50 @@
+name: Compile Binary
+
+on:
+  push:
+    paths:
+      - 'cloudwatch/liveTail/liveTail.py'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: pip install pyinstaller
+
+    - name: Compile binary
+      run: pyinstaller --onefile cloudwatch/liveTail/liveTail.py
+
+    - name: Move binary to dist folder
+      run: mv dist/liveTail cloudwatch/liveTail/dist/
+
+    # - name: Get latest release version
+    #   id: get_latest_release
+    #   run: echo ::set-output name=version::$(git describe --tags `git rev-list --tags --max-count=1`)
+
+    # - name: Increment version
+    #   id: increment_version
+    #   run: |
+    #     echo ::set-output name=version::${{ steps.increment_version.outputs.version }}
+    #     python increment_version.py
+
+    # - name: Create Release
+    #   id: create_release
+    #   uses: actions/create-release@v1
+    #   env:
+    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    #     with:
+    #      tag_name: ${{ steps.increment_version.outputs.version }}
+    #      release_name: Release ${{ steps.increment_version.outputs.version }}
+    #      body: Release ${{ steps.increment_version.outputs.version }}
+    #      draft: false
+    #      prerelease: false
