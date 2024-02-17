@@ -1,8 +1,14 @@
-import argparse
+#!/usr/bin/env python3
+
 import boto3
 from pathlib import Path
+import click
 
 s3 = boto3.client("s3")
+
+def get_s3_buckets():
+    response = s3.list_buckets()
+    return response['Buckets']
 
 def get_file_folders(s3_client, bucket_name, prefix=""):
     file_names = []
@@ -53,33 +59,38 @@ def download_files(s3_client, bucket_name, local_path, file_names, folders):
 
 
 
+
+def initCli(buckets):
+    print(buckets)
+
+    click.secho("\nAvaiable buckets:\n")
+    for idx, bucket in enumerate(buckets):
+        click.secho(f"{idx + 1} - {bucket['Name']}")
+
+    @click.command()
+    @click.option('--option', prompt='\nSelect an option', type=int, help='Select an option')
+    @click.option('--path',  prompt='\nSet the download path',type=str, help='Set download path')
+    def cli(option,path):
+        if option == 0 or option > len(buckets):
+            return  click.secho(f"Invalid option" , fg='red')
+
+        selected_bucket_name=buckets[option-1]['Name']
+        click.secho("Downloading all files ...")
+
+        file_names, folders = get_file_folders(s3,selected_bucket_name)
+
+        with click.progressbar(file_names) as bar:
+            download_files(
+                s3,
+                selected_bucket_name,
+                path,
+                bar,
+                folders
+            )
+        click.secho( "All files downloaded")
+
+    cli()
+
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        prog="downloadAllFiles",
-        description="Download all files from s3 bucket."
-    )
-    parser.add_argument(
-        "bucket-name",
-        metavar="BUCKET",
-        type=str,
-        help="Enter the bucket name.",
-    )
-    parser.add_argument(
-        "download-path",
-        metavar="PATH",
-        type=str,
-        help="Enter the path where save files.",
-    )
-    args = parser.parse_args()
-    bucket_name = vars(args)["bucket-name"]
-    download_path = vars(args)["download-path"]
-
-    file_names, folders = get_file_folders(s3,bucket_name)
-
-    download_files(
-        s3,
-        bucket_name,
-        download_path,
-        file_names,
-        folders
-    )
+     buckets=get_s3_buckets()
+     initCli(buckets)
